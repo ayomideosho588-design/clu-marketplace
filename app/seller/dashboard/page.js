@@ -8,7 +8,6 @@ import {
   CATEGORIES,
   COMMISSION_RATE,
   resizeImageFile,
-  uploadImage,
   addProduct,
   deleteProduct,
   listenProducts,
@@ -187,10 +186,6 @@ function AddProductModal({ onClose, sellerUid, businessName }) {
     }
     setBusy(true);
     try {
-      let imageUrl = null;
-      if (imageData) {
-        imageUrl = await uploadImage(`products/${sellerUid}/${Date.now()}.jpg`, imageData);
-      }
       await addProduct({
         sellerUid,
         businessName,
@@ -199,7 +194,7 @@ function AddProductModal({ onClose, sellerUid, businessName }) {
         price: Number(price),
         stock: Number(stock) || 99,
         description,
-        imageUrl,
+        imageUrl: imageData || null,
       });
       toast("Listing published: " + title);
       onClose();
