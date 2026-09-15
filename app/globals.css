@@ -71,8 +71,8 @@ header.top{background:var(--green);color:var(--white);border-bottom:6px solid va
 .ticket.unread{border-color:var(--green);background:#fff;}
 .ticket.unread:before,.ticket.unread:after{background:var(--paper-dim);}
 
-.hero{background:linear-gradient(180deg,var(--green) 0%,var(--green) 55%,var(--paper) 55%);padding:56px 20px 0;}
-.hero-inner{max-width:1180px;margin:0 auto;color:var(--white);padding-bottom:40px;}
+.hero{background:var(--green);padding:56px 20px 40px;}
+.hero-inner{max-width:1180px;margin:0 auto;color:var(--white);}
 .hero h1{font-size:clamp(34px,5.2vw,58px);line-height:1.02;max-width:760px;}
 .hero h1 .accent{color:var(--gold);}
 .hero p{margin-top:16px;font-size:16.5px;max-width:520px;opacity:0.92;line-height:1.5;}
