@@ -22,11 +22,14 @@ export default function HomePage() {
   }, []);
 
   const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
     return products.filter((p) => {
       const matchCat = category === "All" || p.category === category;
-      const matchSearch =
-        !search ||
-        (p.title + p.description + p.businessName).toLowerCase().includes(search.toLowerCase());
+      const haystack = [p.title, p.description, p.businessName]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const matchSearch = !q || haystack.includes(q);
       return matchCat && matchSearch;
     });
   }, [products, category, search]);
@@ -44,16 +47,6 @@ export default function HomePage() {
               List your business, sell to real students, and get in-app reminders the moment an
               order moves — no more chasing buyers on WhatsApp.
             </p>
-            <div className="hero-stats">
-              <div>
-                <div className="n">{products.length}</div>
-                <div className="l">Active listings</div>
-              </div>
-              <div>
-                <div className="n">{new Set(products.map((p) => p.sellerUid)).size}</div>
-                <div className="l">Campus sellers</div>
-              </div>
-            </div>
           </div>
         </div>
 
