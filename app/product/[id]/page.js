@@ -8,6 +8,7 @@ import Footer from "@/app/components/Footer";
 import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/app/components/Toast";
 import { COMMISSION_RATE, placeOrder, pushNotification } from "@/lib/data";
+import { sendEmail } from "@/lib/email";
 
 function money(n) {
   return "₦" + Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 });
@@ -50,21 +51,23 @@ export default function ProductDetailPage() {
         commission,
         buyerUid: user.uid,
         buyerName: profile.name,
+        buyerEmail: profile.email || user.email || null,
         sellerUid: product.sellerUid,
         sellerBusiness: product.businessName,
+        sellerEmail: product.sellerEmail || null,
         status: "pending",
       };
       await placeOrder(order);
-      await pushNotification(
-        user.uid,
-        "order",
-        `Order placed for "${product.title}" — ${money(total)}. We'll remind you here as ${product.businessName} updates it.`
-      );
-      await pushNotification(
-        product.sellerUid,
-        "order",
-        `New order! ${profile.name} wants ${qty} × "${product.title}" — ${money(total)}.`
-      );
+
+      const buyerMsg = `Order placed for "${product.title}" — ${money(total)}. We'll remind you here as ${product.businessName} updates it.`;
+      const sellerMsg = `New order! ${profile.name} wants ${qty} × "${product.title}" — ${money(total)}.`;
+
+      await pushNotification(user.uid, "order", buyerMsg);
+      await pushNotification(product.sellerUid, "order", sellerMsg);
+
+      sendEmail(order.buyerEmail, profile.name, "Order placed", buyerMsg);
+      sendEmail(order.sellerEmail, product.businessName, "New order received", sellerMsg);
+
       toast("Order placed! Check your notifications for updates.");
       router.push("/orders");
     } catch (e) {
