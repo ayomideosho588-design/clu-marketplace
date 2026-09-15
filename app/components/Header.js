@@ -48,10 +48,20 @@ export default function Header({ search, onSearch }) {
                 <NotifBell />
                 <button
                   className="user-chip"
-                  onClick={() => router.push(profile.isSeller ? "/seller/dashboard" : "/become-seller")}
-                  title={profile.isSeller ? "Seller dashboard" : "Become a seller"}
+                  onClick={() => router.push("/profile")}
+                  title="Your profile"
                 >
-                  <div className="av">{initials(profile.name)}</div>
+                  <div className="av">
+                    {profile.photoUrl ? (
+                      <img
+                        src={profile.photoUrl}
+                        alt=""
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "999px" }}
+                      />
+                    ) : (
+                      initials(profile.name)
+                    )}
+                  </div>
                   {profile.name.split(" ")[0]}
                 </button>
                 <button className="nav-btn" onClick={logout}>Log out</button>
@@ -76,6 +86,12 @@ export default function Header({ search, onSearch }) {
             >
               {profile?.isSeller ? "Sell" : "Become a Seller"}
             </button>
+            <button
+              className={pathname === "/profile" ? "active" : ""}
+              onClick={() => (user ? router.push("/profile") : openAuth("login"))}
+            >
+              {user ? "Profile" : "Profile (log in)"}
+            </button>
             <button className={pathname === "/admin" ? "active" : ""} onClick={() => router.push("/admin")}>
               Owner ledger
             </button>
@@ -85,4 +101,4 @@ export default function Header({ search, onSearch }) {
       {authOpen && <AuthModal initialTab={authTab} onClose={() => setAuthOpen(false)} />}
     </>
   );
-    }
+}
