@@ -15,6 +15,7 @@ import {
   updateOrderStatus,
   pushNotification,
 } from "@/lib/data";
+import { sendEmail } from "@/lib/email";
 
 function money(n) {
   return "₦" + Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 });
@@ -74,7 +75,16 @@ export default function SellerDashboard() {
       completed: `Order for "${order.productTitle}" marked complete. Enjoy!`,
       cancelled: `Your order for "${order.productTitle}" was cancelled by ${order.sellerBusiness}.`,
     };
-    if (msgs[status]) await pushNotification(order.buyerUid, "status", msgs[status]);
+    const subjects = {
+      confirmed: "Order confirmed",
+      shipped: "Order shipped",
+      completed: "Order completed",
+      cancelled: "Order cancelled",
+    };
+    if (msgs[status]) {
+      await pushNotification(order.buyerUid, "status", msgs[status]);
+      sendEmail(order.buyerEmail, order.buyerName, subjects[status], msgs[status]);
+    }
   }
 
   return (
@@ -139,7 +149,14 @@ export default function SellerDashboard() {
         )}
       </div>
       <Footer />
-      {modalOpen && <AddProductModal onClose={() => setModalOpen(false)} sellerUid={user.uid} businessName={profile.business.name} />}
+      {modalOpen && (
+        <AddProductModal
+          onClose={() => setModalOpen(false)}
+          sellerUid={user.uid}
+          businessName={profile.business.name}
+          sellerEmail={profile.email}
+        />
+      )}
     </>
   );
 }
@@ -159,7 +176,7 @@ function orderActions(o, onChange) {
   return "—";
 }
 
-function AddProductModal({ onClose, sellerUid, businessName }) {
+function AddProductModal({ onClose, sellerUid, businessName, sellerEmail }) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [price, setPrice] = useState("");
@@ -189,6 +206,7 @@ function AddProductModal({ onClose, sellerUid, businessName }) {
       await addProduct({
         sellerUid,
         businessName,
+        sellerEmail: sellerEmail || null,
         title,
         category,
         price: Number(price),
@@ -233,4 +251,4 @@ function AddProductModal({ onClose, sellerUid, businessName }) {
       </div>
     </div>
   );
-      }
+}
