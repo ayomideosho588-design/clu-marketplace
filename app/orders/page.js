@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useAuth } from "@/lib/AuthContext";
-import { listenOrders } from "@/lib/data";
+import { useToast } from "@/app/components/Toast";
+import { listenOrders, updateOrderStatus, pushNotification } from "@/lib/data";
+import { sendEmail } from "@/lib/email";
 
 function money(n) {
   return "₦" + Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 });
@@ -13,7 +15,9 @@ function money(n) {
 export default function OrdersPage() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [busyId, setBusyId] = useState(null);
   const router = useRouter();
+  const toast = useToast();
 
   useEffect(() => {
     const unsub = listenOrders(setOrders);
@@ -32,6 +36,21 @@ export default function OrdersPage() {
 
   const myOrders = orders.filter((o) => o.buyerUid === user.uid);
 
+  async function handleCancel(order) {
+    if (!confirm("Cancel this order?")) return;
+    setBusyId(order.id);
+    try {
+      await updateOrderStatus(order.id, "cancelled");
+      const msg = `${order.buyerName} cancelled their order for "${order.productTitle}".`;
+      await pushNotification(order.sellerUid, "status", msg);
+      sendEmail(order.sellerEmail, order.sellerBusiness, "Order cancelled", msg);
+      toast("Order cancelled.");
+    } catch (e) {
+      toast("Something went wrong — try again.");
+    }
+    setBusyId(null);
+  }
+
   return (
     <>
       <Header />
@@ -46,6 +65,16 @@ export default function OrdersPage() {
                 <div className="p">{money(o.total)} · from {o.sellerBusiness}</div>
               </div>
               <span className={`status-badge status-${o.status}`}>{o.status}</span>
+              {o.status === "pending" && (
+                <button
+                  className="btn btn-outline btn-sm"
+                  style={{ marginLeft: 10 }}
+                  disabled={busyId === o.id}
+                  onClick={() => handleCancel(o)}
+                >
+                  {busyId === o.id ? "…" : "Cancel"}
+                </button>
+              )}
             </div>
           ))
         ) : (
@@ -59,4 +88,4 @@ export default function OrdersPage() {
       <Footer />
     </>
   );
-            }
+}
