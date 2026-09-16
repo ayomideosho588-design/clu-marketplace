@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Header from "@/app/components/Header";
@@ -15,6 +15,7 @@ function timeLabel(ts) {
 
 export default function ChatThreadPage() {
   const { chatId } = useParams();
+  const router = useRouter();
   const { user } = useAuth();
   const [chat, setChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -66,69 +67,46 @@ export default function ChatThreadPage() {
   return (
     <>
       <Header />
-      <div className="wrap" style={{ maxWidth: 640, display: "flex", flexDirection: "column", minHeight: "60vh" }}>
-        <div className="dash-header" style={{ marginBottom: 10 }}>
-          <h2 style={{ fontSize: 20 }}>{otherName}</h2>
-        </div>
-
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            background: "var(--white)",
-            border: "1px solid var(--line)",
-            borderRadius: 10,
-            padding: 14,
-            minHeight: 320,
-            maxHeight: "55vh",
-            overflowY: "auto",
-          }}
-        >
-          {messages.length === 0 ? (
-            <div style={{ color: "#877f6b", fontSize: 13, textAlign: "center", margin: "auto" }}>
-              Say hello — this starts the conversation.
+      <div className="wrap" style={{ maxWidth: 640, paddingBottom: 40 }}>
+        <div className="chat-shell">
+          <div className="chat-header">
+            <button className="back" onClick={() => router.push("/messages")}>←</button>
+            <div className="av">{otherName.slice(0, 2).toUpperCase()}</div>
+            <div className="meta">
+              <h3>{otherName}</h3>
+              <span>Campus chat</span>
             </div>
-          ) : (
-            messages.map((m) => {
-              const mine = m.senderUid === user.uid;
-              return (
-                <div
-                  key={m.id}
-                  style={{
-                    alignSelf: mine ? "flex-end" : "flex-start",
-                    maxWidth: "75%",
-                    background: mine ? "var(--green)" : "var(--paper-dim)",
-                    color: mine ? "var(--white)" : "var(--ink)",
-                    padding: "8px 12px",
-                    borderRadius: 12,
-                    borderBottomRightRadius: mine ? 3 : 12,
-                    borderBottomLeftRadius: mine ? 12 : 3,
-                    fontSize: 13.5,
-                  }}
-                >
-                  <div>{m.text}</div>
-                  <div style={{ fontSize: 10, opacity: 0.7, marginTop: 3 }}>{timeLabel(m.createdAt)}</div>
-                </div>
-              );
-            })
-          )}
-          <div ref={bottomRef} />
-        </div>
+          </div>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 30 }}>
-          <input
-            type="text"
-            placeholder="Type a message…"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            style={{ flex: 1 }}
-          />
-          <button className="btn btn-green" disabled={sending} onClick={handleSend}>
-            Send
-          </button>
+          <div className="chat-body">
+            {messages.length === 0 ? (
+              <div className="chat-empty">Say hello — this starts the conversation.</div>
+            ) : (
+              messages.map((m) => {
+                const mine = m.senderUid === user.uid;
+                return (
+                  <div key={m.id} className={`bubble ${mine ? "mine" : "theirs"}`}>
+                    <div>{m.text}</div>
+                    <span className="time">{timeLabel(m.createdAt)}</span>
+                  </div>
+                );
+              })
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          <div className="chat-input-row">
+            <input
+              type="text"
+              placeholder="Type a message…"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            />
+            <button className="chat-send-btn" disabled={sending} onClick={handleSend}>
+              ➤
+            </button>
+          </div>
         </div>
       </div>
       <Footer />
