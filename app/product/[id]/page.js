@@ -78,7 +78,7 @@ export default function ProductDetailPage() {
     setBusy(false);
   }
 
-  async function handleMessageSeller() {
+    async function handleMessageSeller() {
     if (!user || !profile) {
       toast("Log in to message the seller.");
       return;
@@ -89,14 +89,20 @@ export default function ProductDetailPage() {
     }
     setMessaging(true);
     try {
-      const chatId = await ensureChat(user.uid, profile.name, product.sellerUid, product.businessName);
+      const chatId = await ensureChat(
+        user.uid,
+        profile.name,
+        profile.email || user.email,
+        product.sellerUid,
+        product.businessName,
+        product.sellerEmail
+      );
       router.push(`/messages/${chatId}`);
     } catch (e) {
       toast("Something went wrong — try again.");
     }
     setMessaging(false);
   }
-
   return (
     <>
       <Header />
