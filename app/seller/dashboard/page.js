@@ -91,9 +91,16 @@ export default function SellerDashboard() {
     }
   }
 
-  async function handleMessage(order) {
+    async function handleMessage(order) {
     try {
-      const chatId = await ensureChat(user.uid, profile.business.name, order.buyerUid, order.buyerName);
+      const chatId = await ensureChat(
+        user.uid,
+        profile.business.name,
+        profile.email || user.email,
+        order.buyerUid,
+        order.buyerName,
+        order.buyerEmail
+      );
       router.push(`/messages/${chatId}`);
     } catch (e) {
       toast("Something went wrong — try again.");
