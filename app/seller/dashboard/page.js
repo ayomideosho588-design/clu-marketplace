@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useAuth } from "@/lib/AuthContext";
@@ -16,6 +17,7 @@ import {
   pushNotification,
 } from "@/lib/data";
 import { sendEmail } from "@/lib/email";
+import { ensureChat } from "@/lib/chat";
 
 function money(n) {
   return "₦" + Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 });
@@ -26,6 +28,8 @@ export default function SellerDashboard() {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
+  const toast = useToast();
 
   useEffect(() => {
     const u1 = listenProducts(setProducts);
@@ -87,6 +91,15 @@ export default function SellerDashboard() {
     }
   }
 
+  async function handleMessage(order) {
+    try {
+      const chatId = await ensureChat(user.uid, profile.business.name, order.buyerUid, order.buyerName);
+      router.push(`/messages/${chatId}`);
+    } catch (e) {
+      toast("Something went wrong — try again.");
+    }
+  }
+
   return (
     <>
       <Header />
@@ -130,7 +143,7 @@ export default function SellerDashboard() {
         {myOrders.length ? (
           <table>
             <thead>
-              <tr><th>Order</th><th>Buyer</th><th>Total</th><th>Status</th><th>Update</th></tr>
+              <tr><th>Order</th><th>Buyer</th><th>Total</th><th>Status</th><th>Update</th><th></th></tr>
             </thead>
             <tbody>
               {myOrders.map((o) => (
@@ -140,6 +153,7 @@ export default function SellerDashboard() {
                   <td className="mono">{money(o.total)}</td>
                   <td><span className={`status-badge status-${o.status}`}>{o.status}</span></td>
                   <td>{orderActions(o, handleStatusChange)}</td>
+                  <td><button className="btn btn-outline btn-sm" onClick={() => handleMessage(o)}>Message buyer</button></td>
                 </tr>
               ))}
             </tbody>
