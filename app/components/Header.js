@@ -81,6 +81,12 @@ export default function Header({ search, onSearch }) {
               {user ? "My Orders" : "Orders (log in)"}
             </button>
             <button
+              className={pathname.startsWith("/messages") ? "active" : ""}
+              onClick={() => (user ? router.push("/messages") : openAuth("login"))}
+            >
+              {user ? "Messages" : "Messages (log in)"}
+            </button>
+            <button
               className={pathname.startsWith("/seller") || pathname === "/become-seller" ? "active" : ""}
               onClick={() => (user ? router.push(profile?.isSeller ? "/seller/dashboard" : "/become-seller") : openAuth("login"))}
             >
