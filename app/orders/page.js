@@ -52,10 +52,17 @@ export default function OrdersPage() {
     setBusyId(null);
   }
 
-  async function handleMessage(order) {
+    async function handleMessage(order) {
     if (!profile) return;
     try {
-      const chatId = await ensureChat(user.uid, profile.name, order.sellerUid, order.sellerBusiness);
+      const chatId = await ensureChat(
+        user.uid,
+        profile.name,
+        profile.email || user.email,
+        order.sellerUid,
+        order.sellerBusiness,
+        order.sellerEmail
+      );
       router.push(`/messages/${chatId}`);
     } catch (e) {
       toast("Something went wrong — try again.");
