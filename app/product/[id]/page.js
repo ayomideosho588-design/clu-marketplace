@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/app/components/Toast";
 import { COMMISSION_RATE, placeOrder, pushNotification } from "@/lib/data";
 import { sendEmail } from "@/lib/email";
+import { ensureChat } from "@/lib/chat";
 
 function money(n) {
   return "₦" + Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 });
@@ -23,6 +24,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [messaging, setMessaging] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -76,6 +78,25 @@ export default function ProductDetailPage() {
     setBusy(false);
   }
 
+  async function handleMessageSeller() {
+    if (!user || !profile) {
+      toast("Log in to message the seller.");
+      return;
+    }
+    if (user.uid === product.sellerUid) {
+      toast("This is your own listing.");
+      return;
+    }
+    setMessaging(true);
+    try {
+      const chatId = await ensureChat(user.uid, profile.name, product.sellerUid, product.businessName);
+      router.push(`/messages/${chatId}`);
+    } catch (e) {
+      toast("Something went wrong — try again.");
+    }
+    setMessaging(false);
+  }
+
   return (
     <>
       <Header />
@@ -101,6 +122,16 @@ export default function ProductDetailPage() {
                   <div style={{ fontSize: 11.5, color: "#877f6b" }}>Campus seller</div>
                 </div>
               </div>
+              {user && (
+                <button
+                  className="btn btn-outline btn-block"
+                  style={{ marginBottom: 10 }}
+                  disabled={messaging}
+                  onClick={handleMessageSeller}
+                >
+                  {messaging ? "…" : "Message seller"}
+                </button>
+              )}
               {user ? (
                 <>
                   <div className="qty-row">
