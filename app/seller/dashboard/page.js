@@ -71,17 +71,15 @@ export default function SellerDashboard() {
   const revenue = myOrders.reduce((s, o) => s + o.total, 0);
   const commissionOwed = myOrders.reduce((s, o) => s + o.commission, 0);
 
-  async function handleStatusChange(order, status) {
+    async function handleStatusChange(order, status) {
     await updateOrderStatus(order.id, status);
     const msgs = {
       confirmed: `Your order for "${order.productTitle}" was confirmed by ${order.sellerBusiness}.`,
-      shipped: `"${order.productTitle}" is on its way from ${order.sellerBusiness}.`,
       completed: `Order for "${order.productTitle}" marked complete. Enjoy!`,
       cancelled: `Your order for "${order.productTitle}" was cancelled by ${order.sellerBusiness}.`,
     };
     const subjects = {
       confirmed: "Order confirmed",
-      shipped: "Order shipped",
       completed: "Order completed",
       cancelled: "Order cancelled",
     };
@@ -90,7 +88,6 @@ export default function SellerDashboard() {
       sendEmail(order.buyerEmail, order.buyerName, subjects[status], msgs[status]);
     }
   }
-
     async function handleMessage(order) {
     try {
       const chatId = await ensureChat(
@@ -191,8 +188,6 @@ function orderActions(o, onChange) {
       </>
     );
   if (o.status === "confirmed")
-    return <button className="btn btn-sm btn-green" onClick={() => onChange(o, "shipped")}>Mark shipped</button>;
-  if (o.status === "shipped")
     return <button className="btn btn-sm btn-green" onClick={() => onChange(o, "completed")}>Mark complete</button>;
   return "—";
 }
