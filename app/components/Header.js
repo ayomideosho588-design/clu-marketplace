@@ -46,6 +46,7 @@ export default function Header({ search, onSearch }) {
             {user && profile ? (
               <>
                 <NotifBell />
+                <button className="nav-btn" onClick={logout}>Log out</button>
                 <button
                   className="user-chip"
                   onClick={() => router.push("/profile")}
@@ -62,9 +63,8 @@ export default function Header({ search, onSearch }) {
                       initials(profile.name)
                     )}
                   </div>
-                  {profile.name.split(" ")[0]}
+                  <span className="name-label">{profile.name.split(" ")[0]}</span>
                 </button>
-                <button className="nav-btn" onClick={logout}>Log out</button>
               </>
             ) : (
               <>
