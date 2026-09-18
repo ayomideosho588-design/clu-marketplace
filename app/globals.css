@@ -200,3 +200,18 @@ footer.site{margin-top:auto;background:var(--ink);color:rgba(255,252,243,0.7);pa
 .chat-list-item .info h4{font-size:14.5px;margin-bottom:2px;}
 .chat-list-item .info p{font-size:12.5px;color:#877f6b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chat-list-item .time{font-size:11px;color:#a39d89;flex-shrink:0;}
+
+/* ===== Chat: fit mobile and desktop properly ===== */
+.chat-shell{display:flex;flex-direction:column;height:calc(100vh - 230px);}
+.chat-body{flex:1;min-height:0;max-height:none;}
+@media(min-width:900px){
+  .chat-shell{height:70vh;max-height:640px;}
+}
+
+/* ===== Avatar top-right, icon-first on small screens ===== */
+.nav-actions{order:3;}
+.user-chip{order:2;}
+.user-chip .name-label{display:none;}
+@media(min-width:640px){
+  .user-chip .name-label{display:inline;}
+}
