@@ -209,7 +209,7 @@ footer.site{margin-top:auto;background:var(--ink);color:rgba(255,252,243,0.7);pa
 }
 
 /* ===== Avatar top-right, icon-first on small screens ===== */
-.nav-actions{order:3;}
+.nav-actions{order:3;margin-left:auto;}
 .user-chip{order:2;}
 .user-chip .name-label{display:none;}
 @media(min-width:640px){
