@@ -7,10 +7,11 @@ function money(n) {
 
 export default function ProductCard({ product }) {
   const router = useRouter();
+  const thumb = product.images?.length ? product.images[0] : product.imageUrl;
   return (
     <div className="card" onClick={() => router.push(`/product/${product.id}`)}>
       <div className="card-img">
-        {product.imageUrl ? <img src={product.imageUrl} alt={product.title} /> : <div className="ph">no image yet</div>}
+        {thumb ? <img src={thumb} alt={product.title} /> : <div className="ph">no image yet</div>}
         <div className="price-tag">{money(product.price)}</div>
       </div>
       <div className="card-body">
@@ -20,4 +21,4 @@ export default function ProductCard({ product }) {
       </div>
     </div>
   );
-  }
+}
