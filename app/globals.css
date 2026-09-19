@@ -215,10 +215,7 @@ footer.site{margin-top:auto;background:var(--ink);color:rgba(255,252,243,0.7);pa
 @media(min-width:640px){
   .user-chip .name-label{display:inline;}
 }
-.chat-wrap{max-width:760px;}
-@media(min-width:1100px){
-  .chat-wrap{max-width:920px;}
-}
+.chat-wrap{max-width:1500px;}
 .chat-shell{width:100%;}
 
 /* ===== Chat: full-screen thread layout ===== */
@@ -229,8 +226,8 @@ footer.site{margin-top:auto;background:var(--ink);color:rgba(255,252,243,0.7);pa
 .bubble{font-size:15px;padding:11px 15px;}
 
 /* ===== Bigger conversation list items ===== */
-.chat-list-item{padding:18px 20px;gap:16px;margin-bottom:12px;}
-.chat-list-item .av{width:58px;height:58px;font-size:17px;}
-.chat-list-item .info h4{font-size:16.5px;margin-bottom:4px;}
-.chat-list-item .info p{font-size:14px;}
-.chat-list-item .time{font-size:12.5px;}
+.chat-list-item{padding:24px 26px;gap:20px;margin-bottom:14px;border-radius:16px;}
+.chat-list-item .av{width:72px;height:72px;font-size:22px;}
+.chat-list-item .info h4{font-size:19px;margin-bottom:6px;}
+.chat-list-item .info p{font-size:15.5px;}
+.chat-list-item .time{font-size:13px;}
