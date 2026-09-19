@@ -8,6 +8,7 @@ import { useToast } from "@/app/components/Toast";
 import { listenOrders, updateOrderStatus, pushNotification } from "@/lib/data";
 import { sendEmail } from "@/lib/email";
 import { ensureChat } from "@/lib/chat";
+import { addReview } from "@/lib/reviews";
 
 function money(n) {
   return "₦" + Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 });
@@ -17,6 +18,7 @@ export default function OrdersPage() {
   const { user, profile } = useAuth();
   const [orders, setOrders] = useState([]);
   const [busyId, setBusyId] = useState(null);
+  const [reviewOrder, setReviewOrder] = useState(null);
   const router = useRouter();
   const toast = useToast();
 
@@ -52,7 +54,7 @@ export default function OrdersPage() {
     setBusyId(null);
   }
 
-    async function handleMessage(order) {
+  async function handleMessage(order) {
     if (!profile) return;
     try {
       const chatId = await ensureChat(
@@ -96,6 +98,14 @@ export default function OrdersPage() {
                   {busyId === o.id ? "…" : "Cancel"}
                 </button>
               )}
+              {o.status === "completed" && !o.reviewed && (
+                <button className="btn btn-gold btn-sm" style={{ marginLeft: 6 }} onClick={() => setReviewOrder(o)}>
+                  Rate seller
+                </button>
+              )}
+              {o.status === "completed" && o.reviewed && (
+                <span style={{ marginLeft: 6, fontSize: 12, color: "#877f6b" }}>✓ Reviewed</span>
+              )}
             </div>
           ))
         ) : (
@@ -107,6 +117,77 @@ export default function OrdersPage() {
         )}
       </div>
       <Footer />
+      {reviewOrder && (
+        <ReviewModal
+          order={reviewOrder}
+          buyerUid={user.uid}
+          buyerName={profile?.name}
+          onClose={() => setReviewOrder(null)}
+        />
+      )}
     </>
+  );
+}
+
+function ReviewModal({ order, buyerUid, buyerName, onClose }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  async function submit() {
+    setBusy(true);
+    try {
+      await addReview({
+        orderId: order.id,
+        productId: order.productId,
+        productTitle: order.productTitle,
+        sellerUid: order.sellerUid,
+        buyerUid,
+        buyerName,
+        rating,
+        comment,
+      });
+      toast("Thanks for the review!");
+      onClose();
+    } catch (e) {
+      toast("Something went wrong — try again.");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div className="overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <button className="modal-close" onClick={onClose}>✕</button>
+        <h2 style={{ fontSize: 20 }}>Rate {order.sellerBusiness}</h2>
+        <p style={{ fontSize: 13, color: "#877f6b", marginTop: 6 }}>
+          For your order of "{order.productTitle}"
+        </p>
+        <div style={{ display: "flex", gap: 6, fontSize: 34, margin: "18px 0 6px" }}>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              onClick={() => setRating(n)}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                color: n <= rating ? "var(--gold)" : "#ddd4bc",
+                lineHeight: 1,
+              }}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+        <label>Comment (optional)</label>
+        <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="How was it?" />
+        <button className="btn btn-gold btn-block" style={{ marginTop: 20 }} disabled={busy} onClick={submit}>
+          {busy ? "Submitting…" : "Submit review"}
+        </button>
+      </div>
+    </div>
   );
 }
