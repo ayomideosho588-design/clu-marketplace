@@ -245,3 +245,26 @@ footer.site{margin-top:auto;background:var(--ink);color:rgba(255,252,243,0.7);pa
 .photo-thumb button{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:999px;background:rgba(30,23,48,0.75);color:var(--white);border:none;font-size:11px;line-height:1;cursor:pointer;}
 .photo-add{width:78px;height:78px;border-radius:10px;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:26px;color:#a39d89;cursor:pointer;position:relative;}
 .photo-add input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+
+/* ===== Dark mode ===== */
+:root[data-theme="dark"]{
+  --ink:#F1EADC;
+  --paper:#180F2B;
+  --paper-dim:#241A3D;
+  --green:#4A2172;
+  --green-dark:#2A1350;
+  --gold:#E9B24A;
+  --gold-dark:#C08A24;
+  --red:#E06B5B;
+  --brown:#B8895A;
+  --line:rgba(241,234,220,0.15);
+  --white:#2A2044;
+}
+*{transition:background-color .4s ease, color .4s ease, border-color .4s ease;}
+
+.theme-toggle{
+  background:none;border:1.5px solid rgba(255,252,243,0.4);color:var(--white);
+  width:36px;height:36px;border-radius:999px;font-size:16px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.theme-toggle:hover{border-color:var(--white);}
