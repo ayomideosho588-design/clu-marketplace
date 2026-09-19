@@ -7,9 +7,11 @@ import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/app/components/Toast";
-import { COMMISSION_RATE, placeOrder, pushNotification } from "@/lib/data";
+import { COMMISSION_RATE, placeOrder, pushNotification, decrementStock } from "@/lib/data";
 import { sendEmail } from "@/lib/email";
 import { ensureChat } from "@/lib/chat";
+import { listenReviewsForSeller, ratingSummary } from "@/lib/reviews";
+import Stars from "@/app/components/Stars";
 
 function money(n) {
   return "₦" + Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 });
@@ -25,6 +27,8 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
   const [messaging, setMessaging] = useState(false);
+  const [activeImg, setActiveImg] = useState(0);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -34,9 +38,24 @@ export default function ProductDetailPage() {
     })();
   }, [id]);
 
+  useEffect(() => {
+    if (!product?.sellerUid) return;
+    const unsub = listenReviewsForSeller(product.sellerUid, setReviews);
+    return () => unsub();
+  }, [product?.sellerUid]);
+
+  const gallery = product?.images?.length ? product.images : product?.imageUrl ? [product.imageUrl] : [];
+  const stock = typeof product?.stock === "number" ? product.stock : 99;
+  const outOfStock = stock <= 0;
+  const { avg, count } = ratingSummary(reviews);
+
   async function handleOrder() {
     if (!user || !profile) {
       toast("Log in to order.");
+      return;
+    }
+    if (outOfStock) {
+      toast("This item is out of stock.");
       return;
     }
     setBusy(true);
@@ -46,7 +65,7 @@ export default function ProductDetailPage() {
       const order = {
         productId: product.id,
         productTitle: product.title,
-        productImage: product.imageUrl || null,
+        productImage: gallery[0] || null,
         price: product.price,
         qty,
         total,
@@ -58,8 +77,10 @@ export default function ProductDetailPage() {
         sellerBusiness: product.businessName,
         sellerEmail: product.sellerEmail || null,
         status: "pending",
+        reviewed: false,
       };
       await placeOrder(order);
+      await decrementStock(product.id, qty);
 
       const buyerMsg = `Order placed for "${product.title}" — ${money(total)}. We'll remind you here as ${product.businessName} updates it.`;
       const sellerMsg = `New order! ${profile.name} wants ${qty} × "${product.title}" — ${money(total)}.`;
@@ -78,7 +99,7 @@ export default function ProductDetailPage() {
     setBusy(false);
   }
 
-    async function handleMessageSeller() {
+  async function handleMessageSeller() {
     if (!user || !profile) {
       toast("Log in to message the seller.");
       return;
@@ -103,6 +124,7 @@ export default function ProductDetailPage() {
     }
     setMessaging(false);
   }
+
   return (
     <>
       <Header />
@@ -113,8 +135,23 @@ export default function ProductDetailPage() {
           <div className="empty-state"><h3>Listing not found</h3></div>
         ) : (
           <div className="pd-grid">
-            <div className="pd-img">
-              {product.imageUrl ? <img src={product.imageUrl} alt={product.title} /> : <div className="ph">No image</div>}
+            <div>
+              <div className="pd-img">
+                {gallery.length ? <img src={gallery[activeImg]} alt={product.title} /> : <div className="ph">No image</div>}
+              </div>
+              {gallery.length > 1 && (
+                <div className="pd-thumbs">
+                  {gallery.map((src, i) => (
+                    <button
+                      key={i}
+                      className={`pd-thumb ${i === activeImg ? "active" : ""}`}
+                      onClick={() => setActiveImg(i)}
+                    >
+                      <img src={src} alt="" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <span className="cat">{product.category}</span>
@@ -125,7 +162,11 @@ export default function ProductDetailPage() {
                 <div className="av">{product.businessName?.slice(0, 2).toUpperCase()}</div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 13.5 }}>{product.businessName}</div>
-                  <div style={{ fontSize: 11.5, color: "#877f6b" }}>Campus seller</div>
+                  {count > 0 ? (
+                    <Stars value={avg} count={count} size={13} />
+                  ) : (
+                    <div style={{ fontSize: 11.5, color: "#877f6b" }}>No reviews yet</div>
+                  )}
                 </div>
               </div>
               {user && (
@@ -139,17 +180,23 @@ export default function ProductDetailPage() {
                 </button>
               )}
               {user ? (
-                <>
-                  <div className="qty-row">
-                    <button onClick={() => setQty((q) => Math.max(1, q - 1))}>–</button>
-                    <span className="mono" style={{ fontWeight: 700 }}>{qty}</span>
-                    <button onClick={() => setQty((q) => q + 1)}>+</button>
-                    <span style={{ fontSize: 12, color: "#877f6b" }}>in stock: {product.stock}</span>
-                  </div>
-                  <button className="btn btn-gold btn-block" disabled={busy} onClick={handleOrder}>
-                    {busy ? "Placing…" : `Place order — ${money(product.price * qty)}`}
+                outOfStock ? (
+                  <button className="btn btn-outline btn-block" disabled>
+                    Out of stock
                   </button>
-                </>
+                ) : (
+                  <>
+                    <div className="qty-row">
+                      <button onClick={() => setQty((q) => Math.max(1, q - 1))}>–</button>
+                      <span className="mono" style={{ fontWeight: 700 }}>{qty}</span>
+                      <button onClick={() => setQty((q) => Math.min(stock, q + 1))}>+</button>
+                      <span style={{ fontSize: 12, color: "#877f6b" }}>in stock: {stock}</span>
+                    </div>
+                    <button className="btn btn-gold btn-block" disabled={busy} onClick={handleOrder}>
+                      {busy ? "Placing…" : `Place order — ${money(product.price * qty)}`}
+                    </button>
+                  </>
+                )
               ) : (
                 <button className="btn btn-green btn-block" onClick={() => toast("Log in from the top bar to order.")}>
                   Log in to order
