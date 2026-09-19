@@ -215,3 +215,8 @@ footer.site{margin-top:auto;background:var(--ink);color:rgba(255,252,243,0.7);pa
 @media(min-width:640px){
   .user-chip .name-label{display:inline;}
 }
+.chat-wrap{max-width:760px;}
+@media(min-width:1100px){
+  .chat-wrap{max-width:920px;}
+}
+.chat-shell{width:100%;}
