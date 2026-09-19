@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Header from "@/app/components/Header";
-import Footer from "@/app/components/Footer";
 import { useAuth } from "@/lib/AuthContext";
 import { listenMessages, sendMessage } from "@/lib/chat";
 
@@ -44,7 +43,6 @@ export default function ChatThreadPage() {
       <>
         <Header />
         <div className="wrap"><div className="empty-state"><h3>Log in to view this conversation</h3></div></div>
-        <Footer />
       </>
     );
   }
@@ -65,51 +63,48 @@ export default function ChatThreadPage() {
   }
 
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <Header />
-      <div className="wrap chat-wrap" style={{ paddingBottom: 40 }}>
-        <div className="chat-shell">
-          <div className="chat-header">
-            <button className="back" onClick={() => router.push("/messages")}>←</button>
-            <div className="av">{otherName.slice(0, 2).toUpperCase()}</div>
-            <div className="meta">
-              <h3>{otherName}</h3>
-              <span>Campus chat</span>
-            </div>
-          </div>
-
-          <div className="chat-body">
-            {messages.length === 0 ? (
-              <div className="chat-empty">Say hello — this starts the conversation.</div>
-            ) : (
-              messages.map((m) => {
-                const mine = m.senderUid === user.uid;
-                return (
-                  <div key={m.id} className={`bubble ${mine ? "mine" : "theirs"}`}>
-                    <div>{m.text}</div>
-                    <span className="time">{timeLabel(m.createdAt)}</span>
-                  </div>
-                );
-              })
-            )}
-            <div ref={bottomRef} />
-          </div>
-
-          <div className="chat-input-row">
-            <input
-              type="text"
-              placeholder="Type a message…"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            />
-            <button className="chat-send-btn" disabled={sending} onClick={handleSend}>
-              ➤
-            </button>
+      <div className="chat-fullpage">
+        <div className="chat-header">
+          <button className="back" onClick={() => router.push("/messages")}>←</button>
+          <div className="av">{otherName.slice(0, 2).toUpperCase()}</div>
+          <div className="meta">
+            <h3>{otherName}</h3>
+            <span>Campus chat</span>
           </div>
         </div>
+
+        <div className="chat-body">
+          {messages.length === 0 ? (
+            <div className="chat-empty">Say hello — this starts the conversation.</div>
+          ) : (
+            messages.map((m) => {
+              const mine = m.senderUid === user.uid;
+              return (
+                <div key={m.id} className={`bubble ${mine ? "mine" : "theirs"}`}>
+                  <div>{m.text}</div>
+                  <span className="time">{timeLabel(m.createdAt)}</span>
+                </div>
+              );
+            })
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        <div className="chat-input-row">
+          <input
+            type="text"
+            placeholder="Type a message…"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          />
+          <button className="chat-send-btn" disabled={sending} onClick={handleSend}>
+            ➤
+          </button>
+        </div>
       </div>
-      <Footer />
-    </>
+    </div>
   );
 }
