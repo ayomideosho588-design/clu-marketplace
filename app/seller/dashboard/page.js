@@ -8,6 +8,7 @@ import { useToast } from "@/app/components/Toast";
 import {
   CATEGORIES,
   COMMISSION_RATE,
+  MAX_PRODUCT_IMAGES,
   resizeImageFile,
   addProduct,
   deleteProduct,
@@ -18,6 +19,8 @@ import {
 } from "@/lib/data";
 import { sendEmail } from "@/lib/email";
 import { ensureChat } from "@/lib/chat";
+import { listenReviewsForSeller, ratingSummary } from "@/lib/reviews";
+import Stars from "@/app/components/Stars";
 
 function money(n) {
   return "₦" + Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 });
@@ -27,6 +30,7 @@ export default function SellerDashboard() {
   const { user, profile } = useAuth();
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const router = useRouter();
   const toast = useToast();
@@ -39,6 +43,12 @@ export default function SellerDashboard() {
       u2();
     };
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsub = listenReviewsForSeller(user.uid, setReviews);
+    return () => unsub();
+  }, [user]);
 
   if (!user || !profile) {
     return (
@@ -70,8 +80,9 @@ export default function SellerDashboard() {
   const myOrders = orders.filter((o) => o.sellerUid === user.uid);
   const revenue = myOrders.reduce((s, o) => s + o.total, 0);
   const commissionOwed = myOrders.reduce((s, o) => s + o.commission, 0);
+  const { avg, count } = ratingSummary(reviews);
 
-    async function handleStatusChange(order, status) {
+  async function handleStatusChange(order, status) {
     await updateOrderStatus(order.id, status);
     const msgs = {
       confirmed: `Your order for "${order.productTitle}" was confirmed by ${order.sellerBusiness}.`,
@@ -88,7 +99,8 @@ export default function SellerDashboard() {
       sendEmail(order.buyerEmail, order.buyerName, subjects[status], msgs[status]);
     }
   }
-    async function handleMessage(order) {
+
+  async function handleMessage(order) {
     try {
       const chatId = await ensureChat(
         user.uid,
@@ -114,6 +126,13 @@ export default function SellerDashboard() {
             <p style={{ fontSize: 13, color: "#877f6b", marginTop: 4 }}>
               {profile.business.category} · Seller dashboard
             </p>
+            {count > 0 ? (
+              <div style={{ marginTop: 6 }}>
+                <Stars value={avg} count={count} size={14} />
+              </div>
+            ) : (
+              <p style={{ fontSize: 11.5, color: "#877f6b", marginTop: 6 }}>No reviews yet</p>
+            )}
           </div>
           <button className="btn btn-green" onClick={() => setModalOpen(true)}>+ New listing</button>
         </div>
@@ -127,18 +146,21 @@ export default function SellerDashboard() {
 
         <div className="section-head"><h2 style={{ fontSize: 18 }}>My listings</h2></div>
         {myProducts.length ? (
-          myProducts.map((p) => (
-            <div className="mylist-card" key={p.id}>
-              <img src={p.imageUrl || ""} onError={(e) => (e.target.style.visibility = "hidden")} alt="" />
-              <div className="info">
-                <h4>{p.title}</h4>
-                <div className="p">{money(p.price)} · {p.category}</div>
+          myProducts.map((p) => {
+            const thumb = p.images?.length ? p.images[0] : p.imageUrl;
+            return (
+              <div className="mylist-card" key={p.id}>
+                <img src={thumb || ""} onError={(e) => (e.target.style.visibility = "hidden")} alt="" />
+                <div className="info">
+                  <h4>{p.title}</h4>
+                  <div className="p">{money(p.price)} · {p.category} · stock: {p.stock ?? "—"}</div>
+                </div>
+                <button className="btn btn-outline btn-sm" onClick={() => confirm("Remove this listing?") && deleteProduct(p.id)}>
+                  Remove
+                </button>
               </div>
-              <button className="btn btn-outline btn-sm" onClick={() => confirm("Remove this listing?") && deleteProduct(p.id)}>
-                Remove
-              </button>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="empty-state"><h3>No listings yet</h3><p>Add your first product to start selling.</p></div>
         )}
@@ -198,18 +220,24 @@ function AddProductModal({ onClose, sellerUid, businessName, sellerEmail }) {
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("20");
   const [description, setDescription] = useState("");
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageData, setImageData] = useState(null);
+  const [images, setImages] = useState([]);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
 
-  async function handleImage(e) {
+  async function handleAddImage(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const dataUrl = await resizeImageFile(file, 800, 0.72);
-    setImagePreview(dataUrl);
-    setImageData(dataUrl);
-    toast("Photo attached.");
+    if (images.length >= MAX_PRODUCT_IMAGES) {
+      toast(`You can add up to ${MAX_PRODUCT_IMAGES} photos.`);
+      return;
+    }
+    const dataUrl = await resizeImageFile(file, 700, 0.65);
+    setImages((prev) => [...prev, dataUrl]);
+    e.target.value = "";
+  }
+
+  function removeImage(i) {
+    setImages((prev) => prev.filter((_, idx) => idx !== i));
   }
 
   async function submit() {
@@ -228,7 +256,8 @@ function AddProductModal({ onClose, sellerUid, businessName, sellerEmail }) {
         price: Number(price),
         stock: Number(stock) || 99,
         description,
-        imageUrl: imageData || null,
+        images: images.length ? images : null,
+        imageUrl: images[0] || null,
       });
       toast("Listing published: " + title);
       onClose();
@@ -252,14 +281,23 @@ function AddProductModal({ onClose, sellerUid, businessName, sellerEmail }) {
         <label>Price (₦)</label>
         <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} />
         <label>Stock / quantity available</label>
-        <input type="number" min="1" value={stock} onChange={(e) => setStock(e.target.value)} />
+        <input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} />
         <label>Description</label>
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
-        <label>Photo</label>
-        <div className="upload-box">
-          {imagePreview && <img src={imagePreview} alt="preview" />}
-          <span>{imagePreview ? "Tap to change photo" : "Tap to upload a product photo"}</span>
-          <input type="file" accept="image/*" onChange={handleImage} />
+        <label>Photos (up to {MAX_PRODUCT_IMAGES})</label>
+        <div className="photo-grid">
+          {images.map((src, i) => (
+            <div className="photo-thumb" key={i}>
+              <img src={src} alt="" />
+              <button type="button" onClick={() => removeImage(i)}>✕</button>
+            </div>
+          ))}
+          {images.length < MAX_PRODUCT_IMAGES && (
+            <label className="photo-add">
+              +
+              <input type="file" accept="image/*" onChange={handleAddImage} />
+            </label>
+          )}
         </div>
         <button className="btn btn-gold btn-block" style={{ marginTop: 20 }} disabled={busy} onClick={submit}>
           {busy ? "Publishing…" : "Publish listing"}
