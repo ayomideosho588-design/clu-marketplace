@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
 import AuthModal from "./AuthModal";
@@ -7,6 +7,32 @@ import NotifBell from "./NotifBell";
 
 function initials(name) {
   return (name || "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function ThemeToggle() {
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    setDark(document.documentElement.getAttribute("data-theme") === "dark");
+  }, []);
+
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    if (next) {
+      document.documentElement.setAttribute("data-theme", "dark");
+      localStorage.setItem("clu-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      localStorage.setItem("clu-theme", "light");
+    }
+  }
+
+  return (
+    <button className="theme-toggle" onClick={toggle} title={dark ? "Switch to light mode" : "Switch to dark mode"}>
+      {dark ? "☀️" : "🌙"}
+    </button>
+  );
 }
 
 export default function Header({ search, onSearch }) {
@@ -43,6 +69,7 @@ export default function Header({ search, onSearch }) {
             </div>
           )}
           <div className="nav-actions">
+            <ThemeToggle />
             {user && profile ? (
               <>
                 <NotifBell />
