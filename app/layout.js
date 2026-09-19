@@ -24,9 +24,21 @@ export const metadata = {
   description: "Buy and sell on campus. Real accounts, real orders, real reminders.",
 };
 
+const themeInitScript = `
+(function() {
+  try {
+    var t = localStorage.getItem("clu-theme");
+    if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
         <AuthProvider>
           <ToastProvider>
@@ -36,4 +48,4 @@ export default function RootLayout({ children }) {
       </body>
     </html>
   );
-    }
+}
