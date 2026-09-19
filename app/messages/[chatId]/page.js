@@ -67,7 +67,7 @@ export default function ChatThreadPage() {
   return (
     <>
       <Header />
-      <div className="wrap" style={{ maxWidth: 640, paddingBottom: 40 }}>
+      <div className="wrap chat-wrap" style={{ paddingBottom: 40 }}>
         <div className="chat-shell">
           <div className="chat-header">
             <button className="back" onClick={() => router.push("/messages")}>←</button>
