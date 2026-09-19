@@ -220,3 +220,17 @@ footer.site{margin-top:auto;background:var(--ink);color:rgba(255,252,243,0.7);pa
   .chat-wrap{max-width:920px;}
 }
 .chat-shell{width:100%;}
+
+/* ===== Chat: full-screen thread layout ===== */
+.chat-fullpage{flex:1;display:flex;flex-direction:column;min-height:0;max-width:1100px;width:100%;margin:0 auto;box-shadow:0 0 0 1px var(--line);}
+.chat-header{flex-shrink:0;}
+.chat-body{flex:1;min-height:0;max-height:none;padding:22px;}
+.chat-input-row{flex-shrink:0;padding:16px 22px;}
+.bubble{font-size:15px;padding:11px 15px;}
+
+/* ===== Bigger conversation list items ===== */
+.chat-list-item{padding:18px 20px;gap:16px;margin-bottom:12px;}
+.chat-list-item .av{width:58px;height:58px;font-size:17px;}
+.chat-list-item .info h4{font-size:16.5px;margin-bottom:4px;}
+.chat-list-item .info p{font-size:14px;}
+.chat-list-item .time{font-size:12.5px;}
