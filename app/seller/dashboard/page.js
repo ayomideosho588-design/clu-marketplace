@@ -166,24 +166,26 @@ export default function SellerDashboard() {
         )}
 
         <div className="section-head"><h2 style={{ fontSize: 18 }}>Orders received</h2></div>
-        {myOrders.length ? (
-          <table>
-            <thead>
-              <tr><th>Order</th><th>Buyer</th><th>Total</th><th>Status</th><th>Update</th><th></th></tr>
-            </thead>
-            <tbody>
-              {myOrders.map((o) => (
-                <tr key={o.id}>
-                  <td>{o.productTitle} ×{o.qty}</td>
-                  <td>{o.buyerName}</td>
-                  <td className="mono">{money(o.total)}</td>
-                  <td><span className={`status-badge status-${o.status}`}>{o.status}</span></td>
-                  <td>{orderActions(o, handleStatusChange)}</td>
-                  <td><button className="btn btn-outline btn-sm" onClick={() => handleMessage(o)}>Message buyer</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+               {myOrders.length ? (
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Order</th><th>Buyer</th><th>Total</th><th>Status</th><th>Update</th><th></th></tr>
+              </thead>
+              <tbody>
+                {myOrders.map((o) => (
+                  <tr key={o.id}>
+                    <td>{o.productTitle} ×{o.qty}</td>
+                    <td>{o.buyerName}</td>
+                    <td className="mono">{money(o.total)}</td>
+                    <td><span className={`status-badge status-${o.status}`}>{o.status}</span></td>
+                    <td>{orderActions(o, handleStatusChange)}</td>
+                    <td><button className="btn btn-outline btn-sm" onClick={() => handleMessage(o)}>Message buyer</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <div className="empty-state"><h3>No orders yet</h3><p>Once a buyer orders from you, it'll show here.</p></div>
         )}
