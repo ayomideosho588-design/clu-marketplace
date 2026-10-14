@@ -6,7 +6,6 @@ import { useToast } from "./Toast";
 export default function AuthModal({ initialTab = "login", onClose }) {
   const [tab, setTab] = useState(initialTab); // "login" | "signup" | "reset"
   const [name, setName] = useState("");
-  const [matric, setMatric] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [resetEmail, setResetEmail] = useState("");
@@ -27,7 +26,7 @@ export default function AuthModal({ initialTab = "login", onClose }) {
           setBusy(false);
           return;
         }
-        await signup(name, matric, email, password);
+        await signup(name, email, password);
         toast(`Welcome to CLU Marketplace, ${name.split(" ")[0]}!`);
       }
       onClose();
@@ -111,8 +110,6 @@ export default function AuthModal({ initialTab = "login", onClose }) {
           <>
             <label>Full name</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
-            <label>Matric number (optional)</label>
-            <input type="text" placeholder="NSC/2025/048" value={matric} onChange={(e) => setMatric(e.target.value)} />
           </>
         )}
         <label>Email</label>
