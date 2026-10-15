@@ -13,7 +13,6 @@ export default function ProfilePage() {
   const toast = useToast();
 
   const [name, setName] = useState(profile?.name || "");
-  const [matric, setMatric] = useState(profile?.matric || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [photoPreview, setPhotoPreview] = useState(profile?.photoUrl || null);
   const [photoData, setPhotoData] = useState(null);
@@ -50,7 +49,7 @@ export default function ProfilePage() {
     }
     setBusy(true);
     try {
-      const fields = { name: name.trim(), matric: matric.trim(), phone: phone.trim() };
+      const fields = { name: name.trim(), phone: phone.trim() };
       if (photoData) fields.photoUrl = photoData;
       await updateProfileInfo(fields);
       toast("Profile updated.");
@@ -104,9 +103,6 @@ export default function ProfilePage() {
 
         <label>Full name</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
-
-        <label>Matric number</label>
-        <input type="text" value={matric} onChange={(e) => setMatric(e.target.value)} placeholder="NSC/2025/048" />
 
         <label>Phone number</label>
         <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0803 000 0000" />
