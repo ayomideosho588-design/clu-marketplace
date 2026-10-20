@@ -11,7 +11,7 @@ export default function AuthModal({ initialTab = "login", onClose }) {
   const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [busy, setBusy] = useState(false);
-  const { signup, login, resetPassword } = useAuth();
+  const { signup, login, loginWithGoogle, resetPassword } = useAuth();
   const toast = useToast();
 
   async function submit() {
@@ -29,6 +29,19 @@ export default function AuthModal({ initialTab = "login", onClose }) {
         await signup(name, email, password);
         toast(`Welcome to CLU Marketplace, ${name.split(" ")[0]}!`);
       }
+      onClose();
+    } catch (e) {
+      toast(friendlyError(e));
+    }
+    setBusy(false);
+  }
+
+  async function googleSignIn() {
+    setBusy(true);
+    try {
+      const u = await loginWithGoogle();
+      const first = (u?.displayName || "").split(" ")[0];
+      toast(first ? `Welcome, ${first}!` : "Welcome!");
       onClose();
     } catch (e) {
       toast(friendlyError(e));
@@ -143,6 +156,31 @@ export default function AuthModal({ initialTab = "login", onClose }) {
         <button className="btn btn-green btn-block" style={{ marginTop: 20 }} disabled={busy} onClick={submit}>
           {busy ? "…" : tab === "login" ? "Log in" : "Create account"}
         </button>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            margin: "16px 0 4px",
+            fontSize: 12,
+            color: "#877f6b",
+          }}
+        >
+          <div style={{ flex: 1, height: 1, background: "#d9d4c4" }} />
+          or
+          <div style={{ flex: 1, height: 1, background: "#d9d4c4" }} />
+        </div>
+
+        <button
+          type="button"
+          className="btn btn-outline btn-block"
+          style={{ marginTop: 10 }}
+          disabled={busy}
+          onClick={googleSignIn}
+        >
+          Continue with Google
+        </button>
       </div>
     </div>
   );
@@ -155,5 +193,13 @@ function friendlyError(e) {
     return "Email or password doesn't match.";
   if (code.includes("weak-password")) return "Password should be at least 6 characters.";
   if (code.includes("invalid-email")) return "That doesn't look like a valid email.";
+  if (code.includes("popup-closed-by-user") || code.includes("cancelled-popup-request"))
+    return "Google sign-in was cancelled.";
+  if (code.includes("popup-blocked")) return "Your browser blocked the Google popup — allow popups and try again.";
+  if (code.includes("unauthorized-domain"))
+    return "This site isn't authorized for Google sign-in yet — add it in Firebase Authorized domains.";
+  if (code.includes("operation-not-allowed")) return "Google sign-in isn't turned on in Firebase yet.";
+  if (code.includes("account-exists-with-different-credential"))
+    return "That email already has an account — log in with your password instead.";
   return "Something went wrong — try again.";
 }
